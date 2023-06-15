@@ -1,10 +1,5 @@
 import { css } from "@emotion/css";
-import {
-  FastForwardOutlined,
-  FastRewindOutlined,
-  Pause,
-  PlayArrow,
-} from "@mui/icons-material";
+import { FastForward, FastRewind, Pause, PlayArrow } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { ClipData } from "../data/ClipData";
 import ComponentList from "../debug/ComponentList";
@@ -38,11 +33,8 @@ export function App() {
   );
   // https://stackoverflow.com/a/6877530
   const isVideoPlaying = Boolean(
-    video &&
-      video.currentTime > 0 &&
-      !video.paused &&
-      !video.ended &&
-      video.readyState > 2,
+    video && video.currentTime > 0 && !video.paused && !video.ended,
+    //  && video.readyState > 2,
   );
 
   const [videoName, setVideoName] = useState<string>("video.mp4");
@@ -94,24 +86,13 @@ export function App() {
     }
   }
 
-  function skip(event: React.MouseEvent<HTMLElement>): void {
+  function skipButton(event: React.MouseEvent<HTMLElement>): void {
     const seconds = parseFloat(event.currentTarget.dataset.seconds as string);
-
-    if (video) {
-      video.currentTime += seconds;
-    }
+    skip(seconds);
   }
 
-  useEventListener(window, "keydown", async (e) => {
-    if (
-      e.key === " " &&
-      (e.target === document.body ||
-        (e.target instanceof HTMLElement && e.target.dataset.allowkeys != null))
-    ) {
-      e.preventDefault();
-
-      if (!video) return;
-
+  async function playPause() {
+    if (video) {
       try {
         if (isVideoPlaying) {
           video.pause();
@@ -122,17 +103,47 @@ export function App() {
         console.error(error);
       }
     }
+  }
 
+  function skip(seconds: number) {
+    if (video) {
+      video.currentTime += seconds;
+    }
+  }
+
+  useEventListener(window, "keydown", async (e) => {
     if (e.key === "Escape") {
       if (e.target instanceof HTMLElement) {
         e.target.blur();
+      }
+    } else if (
+      e.target === document.body ||
+      (e.target instanceof HTMLElement && e.target.dataset.allowkeys != null)
+    ) {
+      if (e.key === " ") {
+        e.preventDefault();
+        playPause();
+      } else if (e.key === "q" || e.key === "ArrowLeft") {
+        skip(-skipLevels[0]);
+      } else if (e.key === "w" || e.key === "ArrowRight") {
+        skip(skipLevels[0]);
+      } else if (e.key === "a") {
+        skip(-skipLevels[1]);
+      } else if (e.key === "s") {
+        skip(skipLevels[1]);
+      } else if (e.key === "z") {
+        skip(-skipLevels[2]);
+      } else if (e.key === "x") {
+        skip(skipLevels[2]);
       }
     }
   });
 
   useEffect(() => {
     let selectedClip = clips.find((clip) => clip.id === selectedClipId);
-    if (video && selectedClip) {
+    console.log(isVideoPlaying);
+
+    if (video && isVideoPlaying && selectedClip) {
       if (
         selectedClip.start != null &&
         video.currentTime < selectedClip.start
@@ -150,6 +161,13 @@ export function App() {
 
   return (
     <>
+      {new URLSearchParams(location.search).get("showDesignSystem") === "1" && (
+        <>
+          <ComponentList />
+          <hr />
+        </>
+      )}
+
       <div
         className={css`
           height: 100vh;
@@ -236,8 +254,12 @@ export function App() {
                     gap: 16px;
                   `}
                 >
-                  <IconButton level="3" onClick={skip} data-seconds={-seconds}>
-                    <FastRewindOutlined />
+                  <IconButton
+                    level="3"
+                    onClick={skipButton}
+                    data-seconds={-seconds}
+                  >
+                    <FastRewind />
                   </IconButton>
                   <SecondsInput
                     value={seconds}
@@ -252,8 +274,12 @@ export function App() {
                     }}
                     width="6ch"
                   />
-                  <IconButton level="3" onClick={skip} data-seconds={seconds}>
-                    <FastForwardOutlined />
+                  <IconButton
+                    level="3"
+                    onClick={skipButton}
+                    data-seconds={seconds}
+                  >
+                    <FastForward />
                   </IconButton>
                 </div>
               ))}
@@ -444,6 +470,11 @@ export function App() {
                           }
                         }
                   }
+                  onSeek={(time) => {
+                    if (video) {
+                      video.currentTime = time;
+                    }
+                  }}
                   onChange={changeClip}
                   onRemove={removeClip}
                   video={video}
@@ -453,13 +484,6 @@ export function App() {
           </div>
         </div>
       </div>
-
-      {false && (
-        <>
-          <hr />
-          <ComponentList />
-        </>
-      )}
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { css } from "@emotion/css";
 import {
+  ArrowForward,
   DeleteOutlined,
   GpsNotFixed,
   PlayArrowOutlined,
@@ -14,6 +15,7 @@ const Clip: React.FC<{
   checked: boolean;
   onChangeChecked: (checked: boolean) => void;
   onPlay: (() => void) | undefined;
+  onSeek: (time: number) => void;
   onChange: (newData: ClipData) => void;
   onRemove: (data: ClipData) => void;
   video: HTMLVideoElement | undefined | null;
@@ -75,6 +77,19 @@ const Clip: React.FC<{
               gap: 8px;
             `}
           >
+            <IconButton level="4">
+              <GpsNotFixed
+                onClick={() => {
+                  let video = props.video;
+                  if (!video) return;
+
+                  props.onChange({
+                    ...props.data,
+                    [key]: video.currentTime,
+                  });
+                }}
+              />
+            </IconButton>
             <TextField
               level="3"
               type="text"
@@ -90,15 +105,13 @@ const Clip: React.FC<{
               width="12ch"
             />
             <IconButton level="4">
-              <GpsNotFixed
+              <ArrowForward
                 onClick={() => {
-                  let video = props.video;
-                  if (!video) return;
+                  let time = props.data[key];
 
-                  props.onChange({
-                    ...props.data,
-                    [key]: video.currentTime,
-                  });
+                  if (time != null) {
+                    props.onSeek(time);
+                  }
                 }}
               />
             </IconButton>
