@@ -11,6 +11,8 @@ import TextField from "./TextInput";
 
 const Clip: React.FC<{
   data: ClipData;
+  checked: boolean;
+  onChangeChecked: (checked: boolean) => void;
   onPlay: (() => void) | undefined;
   onChange: (newData: ClipData) => void;
   onRemove: (data: ClipData) => void;
@@ -31,7 +33,15 @@ const Clip: React.FC<{
 
         box-sizing: border-box;
         width: 100%;
+
+        box-shadow: ${props.checked &&
+        "inset 0px 0px 8px 8px rgba(255, 255, 255, 0.5)"};
       `}
+      onClick={() => props.onChangeChecked(true)}
+      onBlur={() => {
+        props.onChangeChecked(false);
+      }}
+      tabIndex={-1}
     >
       <IconButton
         level="1"

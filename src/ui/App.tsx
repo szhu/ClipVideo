@@ -5,7 +5,7 @@ import {
   Pause,
   PlayArrow,
 } from "@mui/icons-material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ClipData } from "../data/ClipData";
 import ComponentList from "../debug/ComponentList";
 import generateCommands from "../export/generateCommands";
@@ -117,6 +117,24 @@ export function App() {
     }
   });
 
+  useEffect(() => {
+    let selectedClip = clips.find((clip) => clip.id === selectedClipId);
+    if (video && selectedClip) {
+      if (
+        selectedClip.start != null &&
+        video.currentTime < selectedClip.start
+      ) {
+        video.currentTime = selectedClip.start;
+      } else if (
+        selectedClip.end != null &&
+        video.currentTime > selectedClip.end
+      ) {
+        video.pause();
+        video.currentTime = selectedClip.end;
+      }
+    }
+  }, [video?.currentTime, selectedClipId, clips]);
+
   return (
     <>
       <div
@@ -133,15 +151,20 @@ export function App() {
             max-height: 80vh;
             display: flex;
             flex-flow: row;
+            align-items: center;
           `}
         >
           <div
             className={css`
               width: 280px;
+
+              max-height: 520px;
+              height: 100%;
+              box-sizing: border-box;
+
               display: flex;
               flex-flow: column;
               align-items: center;
-              justify-content: center;
               gap: 12px;
             `}
           >
@@ -183,6 +206,12 @@ export function App() {
               {video?.paused ?? true ? <PlayArrow /> : <Pause />}
             </IconButton>
 
+            <div
+              className={css`
+                flex: 1 0 0;
+              `}
+            />
+
             <div>
               {skipLevels.map((seconds, i) => (
                 <div
@@ -216,6 +245,12 @@ export function App() {
                 </div>
               ))}
             </div>
+
+            <div
+              className={css`
+                flex: 1 0 0;
+              `}
+            />
 
             <div
               className={css`
@@ -256,6 +291,7 @@ export function App() {
               type="file"
               accept="video/*"
               className={css`
+                height: 100%;
                 flex: 1 0 0;
 
                 & {
@@ -304,6 +340,7 @@ export function App() {
               background: black;
               flex: 1 0 0;
               width: 0;
+              height: 100%;
 
               display: ${video?.src ? "block" : "none"};
             `}
@@ -355,7 +392,7 @@ export function App() {
               showShape="always"
               onClick={async () => {
                 let commands = generateCommands(videoName, clips);
-                navigator.clipboard.writeText(commands.join(""));
+                navigator.clipboard.writeText(commands.join("\n"));
                 await new Promise((resolve) => setTimeout(resolve, 0));
                 alert(
                   "Copied to commands to clipboard! Paste into your terminal to export the clips.",
@@ -379,7 +416,11 @@ export function App() {
             {clips.map((clip) => (
               <div key={clip.id}>
                 <Clip
+                  checked={clip.id === selectedClipId}
                   data={clip}
+                  onChangeChecked={(checked) =>
+                    setSelectedClipId(checked ? clip.id : undefined)
+                  }
                   onPlay={
                     clip.start == null
                       ? undefined
@@ -400,8 +441,12 @@ export function App() {
         </div>
       </div>
 
-      <hr />
-      <ComponentList />
+      {false && (
+        <>
+          <hr />
+          <ComponentList />
+        </>
+      )}
     </>
   );
 }
