@@ -88,7 +88,7 @@ const ComponentList: React.FC = () => {
           onRemove={() => {
             console.log("remove");
           }}
-          getVideo={() => undefined}
+          video={undefined}
         />
       </ComponentSet>
     </>

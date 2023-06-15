@@ -2,6 +2,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "strict": true,
-    "lib": ["dom", "dom.iterable", "esnext"]
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "downlevelIteration": true
   }
 }

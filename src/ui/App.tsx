@@ -5,10 +5,15 @@ import {
   Pause,
   PlayArrow,
 } from "@mui/icons-material";
+import { useState } from "react";
 import { ClipData } from "../data/ClipData";
 import ComponentList from "../debug/ComponentList";
+import generateCommands from "../export/generateCommands";
 import createSetStateForKey from "../hooks/createSetStateForKey";
+import useEventListener from "../hooks/useEventListener";
+import useHmsfText from "../hooks/useHmsfText";
 import useLocalStorageBackedState from "../hooks/useLocalStorageBackedState";
+import useVideo from "../hooks/useVideo";
 import Clip from "./Clip";
 import IconButton from "./IconButton";
 import SecondsInput from "./SecondsInput";
@@ -22,16 +27,16 @@ interface State {
   clips: ClipData[];
 }
 
-function getVideo(): HTMLVideoElement | undefined {
-  return document.querySelector("video") as HTMLVideoElement | undefined;
-}
-
 export function App() {
   const [data, setData] = useLocalStorageBackedState<State>("data", {
     skipLevels: [1, 5, 10],
     selectedClipId: undefined,
     clips: [],
   });
+  const [video, forceRender] = useVideo(
+    document.querySelector("video") as HTMLVideoElement | null,
+  );
+  const [videoName, setVideoName] = useState<string>("video.mp4");
 
   const [skipLevels, setSkipLevels] = [
     data.skipLevels,
@@ -48,13 +53,13 @@ export function App() {
 
   function newClip(): void {
     setClips((clips) => [
-      ...clips,
       {
         id: "" + Math.random(),
         start: undefined,
         end: undefined,
         name: "",
       },
+      ...clips,
     ]);
   }
 
@@ -70,39 +75,69 @@ export function App() {
 
   function changeSpeed(event: React.MouseEvent<HTMLElement>): void {
     const speed = parseFloat(event.currentTarget.dataset.speed as string);
-    const video = getVideo();
+
     if (video) {
-      video.playbackRate = speed;
+      try {
+        video.playbackRate = speed;
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 
   function skip(event: React.MouseEvent<HTMLElement>): void {
     const seconds = parseFloat(event.currentTarget.dataset.seconds as string);
-    const video = getVideo();
+
     if (video) {
       video.currentTime += seconds;
     }
   }
 
+  useEventListener(window, "keydown", async (e) => {
+    if (e.key === " " && e.target === document.body) {
+      e.preventDefault();
+
+      if (!video) return;
+
+      try {
+        if (video.paused) {
+          await video.play();
+        } else {
+          video.pause();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    if (e.key === "Escape") {
+      if (e.target instanceof HTMLElement) {
+        e.target.blur();
+      }
+    }
+  });
+
   return (
     <>
       <div
         className={css`
-          min-height: 100vh;
+          height: 100vh;
+          overflow: hidden;
           display: flex;
           flex-flow: column;
+          gap: 12px;
         `}
       >
         <div
           className={css`
-            height: 60%;
+            max-height: 80vh;
             display: flex;
             flex-flow: row;
           `}
         >
           <div
             className={css`
-              width: 40%;
+              width: 280px;
               display: flex;
               flex-flow: column;
               align-items: center;
@@ -113,7 +148,18 @@ export function App() {
             <TextInput
               type="text"
               level="2"
-              defaultValue="21:30:20.23"
+              {...useHmsfText({
+                value: video?.currentTime ?? 0,
+                onChange: (newValue) => {
+                  if (!video) return;
+
+                  if (newValue === undefined) {
+                    video.currentTime = 0;
+                  } else {
+                    video.currentTime = newValue;
+                  }
+                },
+              })}
               width="12ch"
             />
 
@@ -121,7 +167,6 @@ export function App() {
               level="1"
               showShape="always"
               onClick={async () => {
-                const video = getVideo();
                 if (!video) return;
 
                 try {
@@ -135,7 +180,7 @@ export function App() {
                 }
               }}
             >
-              {getVideo()?.paused ?? true ? <PlayArrow /> : <Pause />}
+              {video?.paused ?? true ? <PlayArrow /> : <Pause />}
             </IconButton>
 
             <div>
@@ -152,7 +197,19 @@ export function App() {
                   <IconButton level="3" onClick={skip} data-seconds={-seconds}>
                     <FastRewindOutlined />
                   </IconButton>
-                  <SecondsInput defaultValue={seconds} width="6ch" />
+                  <SecondsInput
+                    value={seconds}
+                    onChange={(e) => {
+                      let newValue = parseFloat(e.currentTarget.value);
+                      setSkipLevels((skipLevels) => {
+                        const newSkipLevels = //
+                          [...skipLevels] as [number, number, number];
+                        newSkipLevels[i] = newValue;
+                        return newSkipLevels;
+                      });
+                    }}
+                    width="6ch"
+                  />
                   <IconButton level="3" onClick={skip} data-seconds={seconds}>
                     <FastForwardOutlined />
                   </IconButton>
@@ -179,6 +236,9 @@ export function App() {
                   <div key={speed}>
                     <TextButton
                       shape="round"
+                      showShape={
+                        video?.playbackRate === speed ? "always" : "hover"
+                      }
                       level="3"
                       onClick={changeSpeed}
                       data-speed={speed}
@@ -191,10 +251,61 @@ export function App() {
             </div>
           </div>
 
+          {video?.src ? null : (
+            <input
+              type="file"
+              accept="video/*"
+              className={css`
+                flex: 1 0 0;
+
+                & {
+                  padding: 0 50px;
+                  position: relative;
+                  cursor: pointer;
+                }
+
+                /* When dragged over */
+
+                &::after {
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  text-align: center;
+                  content: "Select a video";
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  color: white;
+                  background: black;
+                  border: 1px solid black;
+                }
+
+                &:active {
+                  opacity: 0.8;
+                }
+              `}
+              onChange={(e) => {
+                if (e.currentTarget.files === null) return;
+
+                let file = e.currentTarget.files[0];
+                let video = document.querySelector("video") as HTMLVideoElement;
+                video.src = URL.createObjectURL(file);
+                setVideoName(file.name);
+                console.log(file.name);
+              }}
+            />
+          )}
           <video
+            ref={forceRender}
+            controls
             className={css`
               background: black;
               flex: 1 0 0;
+              width: 0;
+
+              display: ${video?.src ? "block" : "none"};
             `}
           />
         </div>
@@ -207,7 +318,13 @@ export function App() {
             flex-flow: column;
             align-items: stretch;
 
+            margin: 0 auto;
+            box-sizing: border-box;
+            width: 1400px;
+            max-width: 100%;
+
             gap: 12px;
+            overflow: hidden;
           `}
         >
           <div
@@ -232,24 +349,54 @@ export function App() {
                 flex-grow: 1;
               `}
             />
-            <TextButton level="4" shape="long" showShape="always">
+            <TextButton
+              level="4"
+              shape="long"
+              showShape="always"
+              onClick={async () => {
+                let commands = generateCommands(videoName, clips);
+                navigator.clipboard.writeText(commands.join(""));
+                await new Promise((resolve) => setTimeout(resolve, 0));
+                alert(
+                  "Copied to commands to clipboard! Paste into your terminal to export the clips.",
+                );
+              }}
+            >
               Export
             </TextButton>
           </div>
 
-          {clips.map((clip) => (
-            <div key={clip.id}>
-              <Clip
-                data={clip}
-                onPlay={() => {
-                  console.log("onPlay");
-                }}
-                onChange={changeClip}
-                onRemove={removeClip}
-                getVideo={getVideo}
-              />
-            </div>
-          ))}
+          <div
+            className={css`
+              display: flex;
+              flex-flow: column;
+              align-items: stretch;
+
+              gap: 12px;
+              overflow-y: auto;
+            `}
+          >
+            {clips.map((clip) => (
+              <div key={clip.id}>
+                <Clip
+                  data={clip}
+                  onPlay={
+                    clip.start == null
+                      ? undefined
+                      : () => {
+                          if (video) {
+                            video.currentTime = clip.start ?? 0;
+                            video.play();
+                          }
+                        }
+                  }
+                  onChange={changeClip}
+                  onRemove={removeClip}
+                  video={video}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

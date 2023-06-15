@@ -5,15 +5,16 @@ import {
   PlayArrowOutlined,
 } from "@mui/icons-material";
 import { ClipData } from "../data/ClipData";
+import useHmsfText from "../hooks/useHmsfText";
 import IconButton from "./IconButton";
 import TextField from "./TextInput";
 
 const Clip: React.FC<{
   data: ClipData;
-  onPlay: () => void;
+  onPlay: (() => void) | undefined;
   onChange: (newData: ClipData) => void;
   onRemove: (data: ClipData) => void;
-  getVideo: () => HTMLVideoElement | undefined;
+  video: HTMLVideoElement | undefined | null;
 }> = (props) => {
   return (
     <div
@@ -32,7 +33,13 @@ const Clip: React.FC<{
         width: 100%;
       `}
     >
-      <IconButton level="1" onClick={props.onPlay}>
+      <IconButton
+        level="1"
+        onClick={props.onPlay}
+        className={css`
+          visibility: ${props.onPlay ? "visible" : "hidden"};
+        `}
+      >
         <PlayArrowOutlined />
       </IconButton>
 
@@ -58,14 +65,21 @@ const Clip: React.FC<{
             <TextField
               level="3"
               type="text"
-              value={props.data[key] ?? ""}
-              readOnly
+              {...useHmsfText({
+                value: props.data[key],
+                onChange: (newValue) => {
+                  props.onChange({
+                    ...props.data,
+                    [key]: newValue,
+                  });
+                },
+              })}
               width="12ch"
             />
             <IconButton level="4">
               <GpsNotFixed
                 onClick={() => {
-                  let video = props.getVideo();
+                  let video = props.video;
                   if (!video) return;
 
                   props.onChange({
@@ -82,7 +96,20 @@ const Clip: React.FC<{
       <TextField
         level="3"
         type="text"
-        defaultValue={props.data.name}
+        value={props.data.name}
+        onChange={(event) => {
+          props.onChange({
+            ...props.data,
+            name: event.target.value,
+          });
+        }}
+        onKeyDown={async (event) => {
+          if (event.key === "Enter") {
+            let input = event.currentTarget;
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            input.select();
+          }
+        }}
         align="left"
         className={css`
           flex: 1 0 0;
