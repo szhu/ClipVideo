@@ -19,6 +19,8 @@ export default styled.input<{
 
   height: ${(props) => OuterSizeByLevel[props.level]};
 
+  font: unset;
+  font-variant-numeric: tabular-nums;
   border: unset;
 
   background: rgba(0, 0, 0, 0.25);

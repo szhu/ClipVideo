@@ -1,9 +1,10 @@
 import { css } from "@emotion/css";
 import {
-  ArrowForward,
   DeleteOutlined,
   GpsNotFixed,
-  PlayArrowOutlined,
+  PlayArrow,
+  SkipNext,
+  SkipPrevious,
 } from "@mui/icons-material";
 import { ClipData } from "../data/ClipData";
 import useHmsfText from "../hooks/useHmsfText";
@@ -48,15 +49,43 @@ const Clip: React.FC<{
       }}
       tabIndex={-1}
     >
-      <IconButton
-        level="1"
-        onClick={props.onPlay}
+      <div
         className={css`
-          visibility: ${props.onPlay ? "visible" : "hidden"};
+          display: flex;
+          flex-flow: row;
+          align-items: center;
         `}
       >
-        <PlayArrowOutlined />
-      </IconButton>
+        <IconButton
+          level="2"
+          onClick={() =>
+            props.data.start != null && props.onSeek(props.data.start)
+          }
+          className={css`
+            visibility: ${props.data.start != null ? "visible" : "hidden"};
+          `}
+        >
+          <SkipPrevious />
+        </IconButton>
+        <IconButton
+          level="1"
+          onClick={props.onPlay}
+          className={css`
+            visibility: ${props.onPlay ? "visible" : "hidden"};
+          `}
+        >
+          <PlayArrow />
+        </IconButton>
+        <IconButton
+          level="2"
+          onClick={() => props.data.end != null && props.onSeek(props.data.end)}
+          className={css`
+            visibility: ${props.data.end != null ? "visible" : "hidden"};
+          `}
+        >
+          <SkipNext />
+        </IconButton>
+      </div>
 
       <div
         className={css`
@@ -77,19 +106,6 @@ const Clip: React.FC<{
               gap: 8px;
             `}
           >
-            <IconButton level="4">
-              <GpsNotFixed
-                onClick={() => {
-                  let video = props.video;
-                  if (!video) return;
-
-                  props.onChange({
-                    ...props.data,
-                    [key]: video.currentTime,
-                  });
-                }}
-              />
-            </IconButton>
             <TextField
               level="3"
               type="text"
@@ -105,13 +121,15 @@ const Clip: React.FC<{
               width="12ch"
             />
             <IconButton level="4">
-              <ArrowForward
+              <GpsNotFixed
                 onClick={() => {
-                  let time = props.data[key];
+                  let video = props.video;
+                  if (!video) return;
 
-                  if (time != null) {
-                    props.onSeek(time);
-                  }
+                  props.onChange({
+                    ...props.data,
+                    [key]: video.currentTime,
+                  });
                 }}
               />
             </IconButton>

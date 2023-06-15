@@ -11,4 +11,8 @@ export default styled.a<{
       showShape: "hover",
       ...props,
     })}
+
+  & > svg {
+    margin: 0 -0.3em;
+  }
 `;

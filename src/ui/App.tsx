@@ -1,5 +1,14 @@
 import { css } from "@emotion/css";
-import { FastForward, FastRewind, Pause, PlayArrow } from "@mui/icons-material";
+import {
+  AddCircle,
+  FastForward,
+  FastRewind,
+  IosShare,
+  Pause,
+  PlayArrow,
+  SkipNext,
+  SkipPrevious,
+} from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { ClipData } from "../data/ClipData";
 import ComponentList from "../debug/ComponentList";
@@ -141,7 +150,6 @@ export function App() {
 
   useEffect(() => {
     let selectedClip = clips.find((clip) => clip.id === selectedClipId);
-    console.log(isVideoPlaying);
 
     if (video && isVideoPlaying && selectedClip) {
       if (
@@ -179,7 +187,9 @@ export function App() {
       >
         <div
           className={css`
-            max-height: 80vh;
+            height: 0;
+            flex: 2 1 0;
+
             display: flex;
             flex-flow: row;
             align-items: center;
@@ -217,25 +227,56 @@ export function App() {
               width="12ch"
             />
 
-            <IconButton
-              level="1"
-              showShape="always"
-              onClick={async () => {
-                if (!video) return;
-
-                try {
-                  if (isVideoPlaying) {
-                    video.pause();
-                  } else {
-                    await video.play();
-                  }
-                } catch (error) {
-                  console.error(error);
-                }
-              }}
+            <div
+              className={css`
+                display: flex;
+                flex-flow: row;
+                align-items: center;
+                gap: 4px;
+              `}
             >
-              {isVideoPlaying ? <Pause /> : <PlayArrow />}
-            </IconButton>
+              <IconButton
+                level="2"
+                onClick={() => {
+                  if (!video) return;
+
+                  video.currentTime = 0;
+                }}
+              >
+                <SkipPrevious />
+              </IconButton>
+
+              <IconButton
+                level="1"
+                showShape="always"
+                onClick={async () => {
+                  if (!video) return;
+
+                  try {
+                    if (isVideoPlaying) {
+                      video.pause();
+                    } else {
+                      await video.play();
+                    }
+                  } catch (error) {
+                    console.error(error);
+                  }
+                }}
+              >
+                {isVideoPlaying ? <Pause /> : <PlayArrow />}
+              </IconButton>
+
+              <IconButton
+                level="2"
+                onClick={() => {
+                  if (!video) return;
+
+                  video.currentTime = video.duration;
+                }}
+              >
+                <SkipNext />
+              </IconButton>
+            </div>
 
             <div
               className={css`
@@ -346,7 +387,8 @@ export function App() {
                   flex-direction: column;
                   justify-content: center;
                   text-align: center;
-                  content: "Select a video";
+                  font-size: 24px;
+                  content: "No video";
                   position: absolute;
                   top: 0;
                   left: 0;
@@ -373,7 +415,7 @@ export function App() {
           )}
           <video
             ref={forceRender}
-            controls
+            controls={!isVideoPlaying}
             className={css`
               background: black;
               flex: 1 0 0;
@@ -398,6 +440,9 @@ export function App() {
             width: 1400px;
             max-width: 100%;
 
+            flex: 1 0 0;
+            min-height: 250px;
+
             gap: 12px;
             overflow: hidden;
           `}
@@ -418,7 +463,7 @@ export function App() {
               showShape="always"
               onClick={newClip}
             >
-              New Clip
+              <AddCircle /> Add
             </TextButton>
             <div
               className={css`
@@ -438,7 +483,8 @@ export function App() {
                 );
               }}
             >
-              Export
+              <IosShare />
+              Export All
             </TextButton>
           </div>
 
@@ -472,6 +518,7 @@ export function App() {
                   }
                   onSeek={(time) => {
                     if (video) {
+                      video.pause();
                       video.currentTime = time;
                     }
                   }}
