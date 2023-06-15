@@ -23,6 +23,7 @@ export default function useVideo(video: HTMLVideoElement | null) {
     video.addEventListener("seeked", forceRender);
     video.addEventListener("seeking", forceRender);
     video.addEventListener("timeupdate", forceRender);
+    video.addEventListener("error", forceRender);
 
     forceRender();
 
@@ -40,6 +41,7 @@ export default function useVideo(video: HTMLVideoElement | null) {
       video.removeEventListener("seeked", forceRender);
       video.removeEventListener("seeking", forceRender);
       video.removeEventListener("timeupdate", forceRender);
+      video.removeEventListener("error", forceRender);
     };
   }, [video]);
 

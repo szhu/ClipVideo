@@ -88,6 +88,10 @@ const ComponentList: React.FC = () => {
           onRemove={() => {
             console.log("remove");
           }}
+          checked={false}
+          onChangeChecked={(checked) => {
+            console.log("checked", checked);
+          }}
           video={undefined}
         />
       </ComponentSet>

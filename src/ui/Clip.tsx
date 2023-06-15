@@ -20,6 +20,7 @@ const Clip: React.FC<{
 }> = (props) => {
   return (
     <div
+      data-allowkeys=""
       className={css`
         display: flex;
         flex-flow: row;
@@ -36,6 +37,8 @@ const Clip: React.FC<{
 
         box-shadow: ${props.checked &&
         "inset 0px 0px 8px 8px rgba(255, 255, 255, 0.5)"};
+
+        outline: none;
       `}
       onClick={() => props.onChangeChecked(true)}
       onBlur={() => {

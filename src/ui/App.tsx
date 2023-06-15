@@ -36,6 +36,15 @@ export function App() {
   const [video, forceRender] = useVideo(
     document.querySelector("video") as HTMLVideoElement | null,
   );
+  // https://stackoverflow.com/a/6877530
+  const isVideoPlaying = Boolean(
+    video &&
+      video.currentTime > 0 &&
+      !video.paused &&
+      !video.ended &&
+      video.readyState > 2,
+  );
+
   const [videoName, setVideoName] = useState<string>("video.mp4");
 
   const [skipLevels, setSkipLevels] = [
@@ -94,16 +103,20 @@ export function App() {
   }
 
   useEventListener(window, "keydown", async (e) => {
-    if (e.key === " " && e.target === document.body) {
+    if (
+      e.key === " " &&
+      (e.target === document.body ||
+        (e.target instanceof HTMLElement && e.target.dataset.allowkeys != null))
+    ) {
       e.preventDefault();
 
       if (!video) return;
 
       try {
-        if (video.paused) {
-          await video.play();
-        } else {
+        if (isVideoPlaying) {
           video.pause();
+        } else {
+          await video.play();
         }
       } catch (error) {
         console.error(error);
@@ -193,17 +206,17 @@ export function App() {
                 if (!video) return;
 
                 try {
-                  if (video.paused) {
-                    await video.play();
-                  } else {
+                  if (isVideoPlaying) {
                     video.pause();
+                  } else {
+                    await video.play();
                   }
                 } catch (error) {
                   console.error(error);
                 }
               }}
             >
-              {video?.paused ?? true ? <PlayArrow /> : <Pause />}
+              {isVideoPlaying ? <Pause /> : <PlayArrow />}
             </IconButton>
 
             <div
@@ -329,7 +342,6 @@ export function App() {
                 let video = document.querySelector("video") as HTMLVideoElement;
                 video.src = URL.createObjectURL(file);
                 setVideoName(file.name);
-                console.log(file.name);
               }}
             />
           )}
@@ -368,6 +380,7 @@ export function App() {
             className={css`
               display: flex;
               flex-flow: row;
+              padding: 0 8px;
               gap: 16px;
               align-items: center;
             `}
