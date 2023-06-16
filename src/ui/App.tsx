@@ -6,6 +6,7 @@ import {
   IosShare,
   Pause,
   PlayArrow,
+  SettingsBackupRestore,
   SkipNext,
   SkipPrevious,
 } from "@mui/icons-material";
@@ -61,15 +62,17 @@ export function App() {
     createSetStateForKey(setData, "clips"),
   ] as const;
 
+  const clipsReversed = [...clips].reverse();
+
   function newClip(): void {
     setClips((clips) => [
+      ...clips,
       {
         id: "" + Math.random(),
         start: undefined,
         end: undefined,
         name: "",
       },
-      ...clips,
     ]);
   }
 
@@ -189,6 +192,7 @@ export function App() {
           className={css`
             height: 0;
             flex: 2 1 0;
+            overflow-x: auto;
 
             display: flex;
             flex-flow: row;
@@ -197,13 +201,19 @@ export function App() {
         >
           <div
             className={css`
+              flex: 1 0 0;
+            `}
+          />
+          <div
+            className={css`
               width: 280px;
+              flex-shrink: 0;
 
               max-height: 520px;
               height: 100%;
               box-sizing: border-box;
 
-              display: flex;
+              display: ${video?.src ? "flex" : "none"};
               flex-flow: column;
               align-items: center;
               gap: 12px;
@@ -212,6 +222,7 @@ export function App() {
             <TextInput
               type="text"
               level="2"
+              placeholder="00:00:00.00"
               {...useHmsfText({
                 value: video?.currentTime ?? 0,
                 onChange: (newValue) => {
@@ -346,7 +357,7 @@ export function App() {
                 }
               `}
             >
-              {[0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 5, 10, 20].map(
+              {[0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 5, 10, 15].map(
                 (speed) => (
                   <div key={speed}>
                     <TextButton
@@ -366,63 +377,88 @@ export function App() {
             </div>
           </div>
 
-          {video?.src ? null : (
-            <input
-              type="file"
-              accept="video/*"
-              className={css`
-                height: 100%;
-                flex: 1 0 0;
-
-                & {
-                  padding: 0 50px;
-                  position: relative;
-                  cursor: pointer;
-                }
-
-                /* When dragged over */
-
-                &::after {
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: center;
-                  text-align: center;
-                  font-size: 24px;
-                  content: "No video";
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  right: 0;
-                  bottom: 0;
-                  color: white;
-                  background: black;
-                  border: 1px solid black;
-                }
-
-                &:active {
-                  opacity: 0.8;
-                }
-              `}
-              onChange={(e) => {
-                if (e.currentTarget.files === null) return;
-
-                let file = e.currentTarget.files[0];
-                let video = document.querySelector("video") as HTMLVideoElement;
-                video.src = URL.createObjectURL(file);
-                setVideoName(file.name);
-              }}
-            />
-          )}
-          <video
-            ref={forceRender}
-            controls={!isVideoPlaying}
+          <div
             className={css`
-              background: black;
-              flex: 1 0 0;
-              width: 0;
-              height: 100%;
+              flex: 0 0.1 0;
 
-              display: ${video?.src ? "block" : "none"};
+              align-self: stretch;
+
+              padding: 4px;
+              display: flex;
+              flex-flow: column;
+              align-items: stretch;
+              justify-content: stretch;
+            `}
+          >
+            {video?.src ? null : (
+              <input
+                type="file"
+                accept="video/*"
+                className={css`
+                  height: 100%;
+                  width: 100vw;
+                  flex: 1 0 0;
+                  border: 4px solid transparent;
+
+                  & {
+                    position: relative;
+                    cursor: pointer;
+                  }
+
+                  /* When dragged over */
+
+                  &::after {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    text-align: center;
+                    font-size: 24px;
+                    content: "No video";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    color: white;
+                    background: black;
+                    border: 1px solid black;
+                  }
+
+                  &:active {
+                    opacity: 0.8;
+                  }
+                `}
+                onChange={(e) => {
+                  if (e.currentTarget.files === null) return;
+
+                  let file = e.currentTarget.files[0];
+                  let video = document.querySelector(
+                    "video",
+                  ) as HTMLVideoElement;
+                  video.src = URL.createObjectURL(file);
+                  setVideoName(file.name);
+                }}
+              />
+            )}
+            <video
+              ref={forceRender}
+              controls={!isVideoPlaying}
+              className={css`
+                background: black;
+                border-radius: 8px;
+
+                flex: 1 0 0;
+                /* width: 100%; */
+                height: 100%;
+
+                display: ${video?.src ? "block" : "none"};
+              `}
+            />
+          </div>
+
+          <div
+            className={css`
+              flex: 1 0 0;
             `}
           />
         </div>
@@ -470,13 +506,34 @@ export function App() {
                 flex-grow: 1;
               `}
             />
+
+            <TextButton
+              level="4"
+              shape="long"
+              showShape="always"
+              onClick={async () => {
+                let json = JSON.stringify(clips, null, 2);
+                await navigator.clipboard.writeText(json);
+                await new Promise((resolve) => setTimeout(resolve, 0));
+
+                let newJson = prompt(
+                  "Copy data JSON to clipboard.\n\nEnter new data below to import.",
+                );
+                if (newJson) {
+                  setClips(JSON.parse(newJson));
+                }
+              }}
+            >
+              <SettingsBackupRestore />
+              Back Up Data
+            </TextButton>
             <TextButton
               level="4"
               shape="long"
               showShape="always"
               onClick={async () => {
                 let commands = generateCommands(videoName, clips);
-                navigator.clipboard.writeText(commands.join("\n"));
+                await navigator.clipboard.writeText(commands.join("\n"));
                 await new Promise((resolve) => setTimeout(resolve, 0));
                 alert(
                   "Copied to commands to clipboard! Paste into your terminal to export the clips.",
@@ -498,7 +555,7 @@ export function App() {
               overflow-y: auto;
             `}
           >
-            {clips.map((clip) => (
+            {clipsReversed.map((clip) => (
               <div key={clip.id}>
                 <Clip
                   checked={clip.id === selectedClipId}

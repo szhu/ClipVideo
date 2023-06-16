@@ -11,7 +11,6 @@ function roundToDigits(n: number, digits: number) {
 
 export default function generateCommands(src: string, clips: ClipData[]) {
   // ffmpeg -ss 30 -i input.wmv -c copy -t 10 output.wmv
-  clips = clips.slice().reverse();
   return clips.map((clip, index) => {
     let start = roundToDigits(clip.start ?? NaN, 3);
     let end = roundToDigits(clip.end ?? NaN, 3);

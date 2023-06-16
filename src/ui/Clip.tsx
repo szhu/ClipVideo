@@ -6,6 +6,7 @@ import {
   SkipNext,
   SkipPrevious,
 } from "@mui/icons-material";
+import { useRef } from "react";
 import { ClipData } from "../data/ClipData";
 import useHmsfText from "../hooks/useHmsfText";
 import IconButton from "./IconButton";
@@ -21,8 +22,11 @@ const Clip: React.FC<{
   onRemove: (data: ClipData) => void;
   video: HTMLVideoElement | undefined | null;
 }> = (props) => {
+  let ref = useRef<HTMLDivElement>(null);
+
   return (
     <div
+      ref={ref}
       data-allowkeys=""
       className={css`
         display: flex;
@@ -39,12 +43,18 @@ const Clip: React.FC<{
         width: 100%;
 
         box-shadow: ${props.checked &&
-        "inset 0px 0px 8px 8px rgba(255, 255, 255, 0.5)"};
+        "inset 0px 0px 60px 0px rgba(255, 255, 255, 0.4)"};
 
         outline: none;
       `}
       onClick={() => props.onChangeChecked(true)}
-      onBlur={() => {
+      onPointerDown={() => props.onChangeChecked(true)}
+      onBlur={(e) => {
+        let newlyFocusedElement = e.relatedTarget;
+        if (newlyFocusedElement instanceof HTMLElement) {
+          if (ref.current?.contains(newlyFocusedElement)) return;
+        }
+
         props.onChangeChecked(false);
       }}
       tabIndex={-1}
@@ -109,6 +119,7 @@ const Clip: React.FC<{
             <TextField
               level="3"
               type="text"
+              placeholder="00:00:00.00"
               {...useHmsfText({
                 value: props.data[key],
                 onChange: (newValue) => {
