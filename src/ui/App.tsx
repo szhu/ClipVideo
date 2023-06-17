@@ -38,7 +38,7 @@ export function App() {
     selectedClipId: undefined,
     clips: [],
   });
-  const [video, forceRender] = useVideo(
+  const [video, setVideo] = useVideo(
     document.querySelector("video") as HTMLVideoElement | null,
   );
   // https://stackoverflow.com/a/6877530
@@ -408,7 +408,7 @@ export function App() {
               `}
             >
               <video
-                ref={forceRender}
+                ref={setVideo}
                 controls={!isVideoPlaying}
                 playsInline
                 className={css`

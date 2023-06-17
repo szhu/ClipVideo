@@ -1,49 +1,80 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+function useRequestAnimationFrameIdempotent() {
+  const requestAnimationFrameIdRef = useRef<number | undefined>(undefined);
+
+  return function requestAnimationFrameIdempotent(
+    callback: FrameRequestCallback,
+  ) {
+    if (requestAnimationFrameIdRef.current != null) {
+      cancelAnimationFrame(requestAnimationFrameIdRef.current);
+    }
+
+    requestAnimationFrameIdRef.current = requestAnimationFrame(callback);
+  };
+}
 
 export default function useVideo(video: HTMLVideoElement | null) {
   const [, setDummy] = useState(0);
+  const requestAnimationFrameIdempotent = useRequestAnimationFrameIdempotent();
 
-  const forceRender = useCallback(() => {
+  const setVideoAndRender = useCallback((newVideo?: HTMLVideoElement | any) => {
+    if (newVideo instanceof HTMLVideoElement) {
+      video = newVideo;
+    }
     setDummy((x) => x + 1);
+
+    let isVideoPlaying =
+      video &&
+      video.currentTime > 0 &&
+      !video.paused &&
+      !video.ended &&
+      video.readyState > 2;
+
+    if (isVideoPlaying) {
+      requestAnimationFrameIdempotent(setVideoAndRender);
+    }
   }, []);
 
   useEffect(() => {
     if (video === null) return;
 
-    video.addEventListener("ended", forceRender);
-    video.addEventListener("loadedmetadata", forceRender);
-    video.addEventListener("load", forceRender);
-    video.addEventListener("loadeddata", forceRender);
-    video.addEventListener("loadstart", forceRender);
-    video.addEventListener("pause", forceRender);
-    video.addEventListener("play", forceRender);
-    video.addEventListener("playing", forceRender);
-    video.addEventListener("progress", forceRender);
-    video.addEventListener("ratechange", forceRender);
-    video.addEventListener("seeked", forceRender);
-    video.addEventListener("seeking", forceRender);
-    video.addEventListener("timeupdate", forceRender);
-    video.addEventListener("error", forceRender);
+    const theVideo = video;
 
-    forceRender();
+    theVideo.addEventListener("ended", setVideoAndRender);
+    theVideo.addEventListener("loadedmetadata", setVideoAndRender);
+    theVideo.addEventListener("load", setVideoAndRender);
+    theVideo.addEventListener("loadeddata", setVideoAndRender);
+    theVideo.addEventListener("loadstart", setVideoAndRender);
+    theVideo.addEventListener("pause", setVideoAndRender);
+    theVideo.addEventListener("play", setVideoAndRender);
+    theVideo.addEventListener("playing", setVideoAndRender);
+    theVideo.addEventListener("progress", setVideoAndRender);
+    theVideo.addEventListener("ratechange", setVideoAndRender);
+    theVideo.addEventListener("seeked", setVideoAndRender);
+    theVideo.addEventListener("seeking", setVideoAndRender);
+    theVideo.addEventListener("timeupdate", setVideoAndRender);
+    theVideo.addEventListener("error", setVideoAndRender);
+
+    setVideoAndRender();
 
     return () => {
-      video.removeEventListener("ended", forceRender);
-      video.removeEventListener("loadedmetadata", forceRender);
-      video.removeEventListener("load", forceRender);
-      video.removeEventListener("loadeddata", forceRender);
-      video.removeEventListener("loadstart", forceRender);
-      video.removeEventListener("pause", forceRender);
-      video.removeEventListener("play", forceRender);
-      video.removeEventListener("playing", forceRender);
-      video.removeEventListener("progress", forceRender);
-      video.removeEventListener("ratechange", forceRender);
-      video.removeEventListener("seeked", forceRender);
-      video.removeEventListener("seeking", forceRender);
-      video.removeEventListener("timeupdate", forceRender);
-      video.removeEventListener("error", forceRender);
+      theVideo.removeEventListener("ended", setVideoAndRender);
+      theVideo.removeEventListener("loadedmetadata", setVideoAndRender);
+      theVideo.removeEventListener("load", setVideoAndRender);
+      theVideo.removeEventListener("loadeddata", setVideoAndRender);
+      theVideo.removeEventListener("loadstart", setVideoAndRender);
+      theVideo.removeEventListener("pause", setVideoAndRender);
+      theVideo.removeEventListener("play", setVideoAndRender);
+      theVideo.removeEventListener("playing", setVideoAndRender);
+      theVideo.removeEventListener("progress", setVideoAndRender);
+      theVideo.removeEventListener("ratechange", setVideoAndRender);
+      theVideo.removeEventListener("seeked", setVideoAndRender);
+      theVideo.removeEventListener("seeking", setVideoAndRender);
+      theVideo.removeEventListener("timeupdate", setVideoAndRender);
+      theVideo.removeEventListener("error", setVideoAndRender);
     };
   }, [video]);
 
-  return [video, forceRender] as const;
+  return [video, setVideoAndRender] as const;
 }
