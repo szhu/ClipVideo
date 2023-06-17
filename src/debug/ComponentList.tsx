@@ -67,10 +67,10 @@ const ComponentList: React.FC = () => {
       <ComponentSet>
         <legend>Seconds Input</legend>
 
-        <SecondsInput defaultValue="1" />
+        <SecondsInput defaultValue="1" onChangeValue={() => undefined} />
 
         <TextButton level="3" shape="long" showShape="always">
-          <SecondsInput defaultValue="1" />
+          <SecondsInput defaultValue="1" onChangeValue={() => undefined} />
         </TextButton>
       </ComponentSet>
 

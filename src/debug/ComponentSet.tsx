@@ -11,7 +11,7 @@ export default styled.fieldset`
   gap: 16px;
 
   border: 1px dotted #9747ff;
-  border-radius: 5px;
+  border-radius: 1rem;
 
   > legend {
     font: 10px "Inter", sans-serif;

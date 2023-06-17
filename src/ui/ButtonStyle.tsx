@@ -1,17 +1,17 @@
 import { css } from "@emotion/react";
 
 const OuterSizeByLevel = {
-  1: "72px",
-  2: "56px",
-  3: "44px",
-  4: "32px",
+  1: "72rem",
+  2: "56rem",
+  3: "44rem",
+  4: "32rem",
 };
 
 const InnerSizeByLevel = {
-  1: "40px",
-  2: "32px",
-  3: "24px",
-  4: "18px",
+  1: "40rem",
+  2: "32rem",
+  3: "24rem",
+  4: "18rem",
 };
 
 interface ButtonProps {
@@ -30,9 +30,9 @@ export function ButtonStyle(props: ButtonProps) {
     justify-content: center;
     align-items: center;
 
-    padding: ${props.shape === "long" ? "0 20px" : "0px"};
+    padding: ${props.shape === "long" ? "0 20rem" : "0"};
 
-    gap: 16px;
+    gap: 16rem;
 
     cursor: pointer;
     user-select: none;
@@ -49,24 +49,21 @@ export function ButtonStyle(props: ButtonProps) {
       background-color: ${props.showShape === "always"
         ? "rgba(255, 255, 255, 0.2)"
         : "transparent"};
-      background-color: ${props.showShape === "always"
-        ? "box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.25);"
-        : "transparent"};
     }
 
     &:hover {
       background-color: rgba(255, 255, 255, 0.2);
-      box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 0 3rem rgba(0, 0, 0, 0.25);
     }
 
     &:active {
       background-color: rgba(255, 255, 255, 0.4);
-      box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 0 3rem rgba(0, 0, 0, 0.25);
     }
 
     &:focus {
       outline: none;
-      box-shadow: 0px 0px 4px 4px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 4rem 4rem rgba(255, 255, 255, 0.5);
     }
 
     > svg {

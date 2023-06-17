@@ -32,18 +32,18 @@ const Clip: React.FC<{
         display: flex;
         flex-flow: row;
         align-items: center;
-        padding: 0px 16px;
-        gap: 32px;
+        padding: 0 16rem;
+        gap: 32rem;
 
-        height: 100px;
+        height: 100rem;
         background: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
+        border-radius: 10rem;
 
         box-sizing: border-box;
         width: 100%;
 
         box-shadow: ${props.checked &&
-        "inset 0px 0px 60px 0px rgba(255, 255, 255, 0.4)"};
+        "inset 0 0 60rem 0 rgba(255, 255, 255, 0.4)"};
 
         outline: none;
       `}
@@ -102,7 +102,7 @@ const Clip: React.FC<{
           display: flex;
           flex-flow: column;
           align-items: center;
-          gap: 4px;
+          gap: 4rem;
         `}
       >
         {(["start", "end"] as const).map((key) => (
@@ -112,8 +112,8 @@ const Clip: React.FC<{
               display: flex;
               flex-direction: row;
               align-items: center;
-              padding: 0px;
-              gap: 8px;
+              padding: 0;
+              gap: 8rem;
             `}
           >
             <TextField
