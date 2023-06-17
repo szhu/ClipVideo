@@ -2,11 +2,13 @@ import { css } from "@emotion/css";
 import {
   DeleteOutlined,
   GpsNotFixed,
+  Pause,
   PlayArrow,
   SkipNext,
   SkipPrevious,
 } from "@mui/icons-material";
 import { useRef } from "react";
+import { useVideoActions } from "../actions/useVideoActions";
 import { ClipData } from "../data/ClipData";
 import useHmsfText from "../hooks/useHmsfText";
 import IconButton from "./IconButton";
@@ -17,13 +19,14 @@ const Clip: React.FC<{
   data: ClipData;
   checked: boolean;
   onChangeChecked: (checked: boolean) => void;
-  onPlay: (() => void) | undefined;
   onSeek: (time: number) => void;
   onChange: (newData: ClipData) => void;
   onRemove: (data: ClipData) => void;
   video: HTMLVideoElement | undefined | null;
 }> = (props) => {
   const ref = useRef<HTMLDivElement>(null);
+
+  let { playPause, isPlaying } = useVideoActions(props.video);
 
   const isWithinTimeBounds =
     props.video != null &&
@@ -32,6 +35,12 @@ const Clip: React.FC<{
     props.video.currentTime >= props.data.start &&
     props.data.end != null &&
     props.video.currentTime <= props.data.end;
+
+  const isAtEnd =
+    props.video != null &&
+    props.video.currentTime != null &&
+    props.data.end != null &&
+    props.video.currentTime >= props.data.end;
 
   return (
     <div
@@ -106,13 +115,26 @@ const Clip: React.FC<{
         </IconButton>
         <IconButton
           level="1"
-          onClick={props.onPlay}
+          onClick={
+            props.video == null || props.data.start == null
+              ? undefined
+              : () => {
+                  if (props.video == null || props.data.start == null) return;
+
+                  if (isWithinTimeBounds && !isAtEnd) {
+                    playPause();
+                  } else {
+                    props.video.currentTime = props.data.start;
+                    props.video.play();
+                  }
+                }
+          }
           className={css`
-            visibility: ${props.onPlay ? "visible" : "hidden"};
+            visibility: ${props.data.start != null ? "visible" : "hidden"};
           `}
-          showShape={props.checked && !props.video?.paused ? "always" : "hover"}
+          showShape={isWithinTimeBounds ? "always" : "hover"}
         >
-          <PlayArrow />
+          {isWithinTimeBounds && isPlaying ? <Pause /> : <PlayArrow />}
         </IconButton>
         <IconButton
           level="2"

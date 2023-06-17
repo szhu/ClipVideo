@@ -545,16 +545,6 @@ export function App() {
                   onChangeChecked={(checked) =>
                     setSelectedClipId(checked ? clip.id : undefined)
                   }
-                  onPlay={
-                    clip.start == null
-                      ? undefined
-                      : () => {
-                          if (video) {
-                            video.currentTime = clip.start ?? 0;
-                            video.play();
-                          }
-                        }
-                  }
                   onSeek={(time) => {
                     if (video) {
                       video.pause();

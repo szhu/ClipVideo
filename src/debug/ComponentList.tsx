@@ -79,9 +79,6 @@ const ComponentList: React.FC = () => {
 
         <Clip
           data={DemoClip}
-          onPlay={() => {
-            console.log("play");
-          }}
           onChange={() => {
             console.log("change");
           }}
