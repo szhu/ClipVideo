@@ -11,6 +11,7 @@ import { ClipData } from "../data/ClipData";
 import useHmsfText from "../hooks/useHmsfText";
 import IconButton from "./IconButton";
 import TextField from "./TextInput";
+import Timeline from "./Timeline";
 
 const Clip: React.FC<{
   data: ClipData;
@@ -22,7 +23,15 @@ const Clip: React.FC<{
   onRemove: (data: ClipData) => void;
   video: HTMLVideoElement | undefined | null;
 }> = (props) => {
-  let ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const isWithinTimeBounds =
+    props.video != null &&
+    props.video.currentTime != null &&
+    props.data.start != null &&
+    props.video.currentTime >= props.data.start &&
+    props.data.end != null &&
+    props.video.currentTime <= props.data.end;
 
   return (
     <div
@@ -32,7 +41,7 @@ const Clip: React.FC<{
         display: flex;
         flex-flow: row;
         align-items: center;
-        padding: 0 16rem;
+        padding: 0 16rem 4rem;
         gap: 32rem;
 
         height: 100rem;
@@ -46,6 +55,8 @@ const Clip: React.FC<{
         "inset 0 0 60rem 0 rgba(255, 255, 255, 0.4)"};
 
         outline: none;
+
+        position: relative;
       `}
       onClick={() => props.onChangeChecked(true)}
       onPointerDown={() => props.onChangeChecked(true)}
@@ -59,6 +70,22 @@ const Clip: React.FC<{
       }}
       tabIndex={-1}
     >
+      <div
+        className={css`
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          display: ${isWithinTimeBounds ? "block" : "none"};
+        `}
+      >
+        <Timeline
+          start={props.data.start ?? 0}
+          end={props.data.end ?? 0}
+          current={props.video?.currentTime ?? 0}
+        />
+      </div>
+
       <div
         className={css`
           display: flex;

@@ -27,6 +27,7 @@ import SecondsInput from "./SecondsInput";
 import TextButton from "./TextButton";
 import TextInput from "./TextInput";
 import TextSpan from "./TextSpan";
+import Timeline from "./Timeline";
 
 interface State {
   skipLevels: [number, number, number];
@@ -181,7 +182,7 @@ export function App() {
                 align-items: center;
 
                 padding: 10rem 0;
-                gap: 12px;
+                gap: 12rem;
               `}
             >
               <div
@@ -262,7 +263,7 @@ export function App() {
                     `}
                   >
                     <IconButton
-                      level="3"
+                      level="2"
                       onClick={handleSkipButton}
                       data-seconds={-seconds}
                     >
@@ -281,7 +282,7 @@ export function App() {
                       width="6ch"
                     />
                     <IconButton
-                      level="3"
+                      level="2"
                       onClick={handleSkipButton}
                       data-seconds={seconds}
                     >
@@ -350,22 +351,30 @@ export function App() {
             >
               <video
                 ref={setVideo}
-                controls={!isPlaying}
+                // controls={!isPlaying}
                 playsInline
                 className={css`
-                  height: 100%;
+                  height: calc(100% - 24rem);
                   width: 100%;
 
                   background: black;
                   border-radius: 8rem;
 
-                  /* flex: 1 0 0; */
-                  /* height: 100%; */
-                  /* max-height: 100%; */
-
                   display: ${video?.src ? "block" : "none"};
                 `}
               />
+              <div
+                className={css`
+                  box-sizing: border-box;
+                  padding: 6rem 0;
+                `}
+              >
+                <Timeline
+                  start={0}
+                  end={video?.duration ?? 0}
+                  current={video?.currentTime ?? 0}
+                />
+              </div>
             </div>
 
             <div
@@ -417,6 +426,16 @@ export function App() {
                 let file = e.currentTarget.files[0];
                 let video = document.querySelector("video") as HTMLVideoElement;
                 video.src = URL.createObjectURL(file);
+
+                // Force the video to load so we can get the duration:
+                video.ondurationchange = () => {
+                  if (Number.isFinite(video.duration)) {
+                    video.currentTime = 0;
+                    video.ondurationchange = null;
+                  }
+                };
+                video.currentTime = Number.MAX_VALUE;
+
                 setVideoName(file.name);
               }}
             />
@@ -476,7 +495,7 @@ export function App() {
               showShape="always"
               onClick={async () => {
                 let json = JSON.stringify(clips, null, 2);
-                await navigator.clipboard.writeText(json);
+                await navigator.clipboard?.writeText(json);
                 await new Promise((resolve) => setTimeout(resolve, 0));
 
                 let newJson = prompt(
@@ -496,7 +515,7 @@ export function App() {
               showShape="always"
               onClick={async () => {
                 let commands = generateCommands(videoName, clips);
-                await navigator.clipboard.writeText(commands.join("\n"));
+                await navigator.clipboard?.writeText(commands.join("\n"));
                 await new Promise((resolve) => setTimeout(resolve, 0));
                 alert(
                   "Copied to commands to clipboard! Paste into your terminal to export the clips.",
