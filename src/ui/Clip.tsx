@@ -67,7 +67,6 @@ const Clip: React.FC<{
 
         position: relative;
       `}
-      onClick={() => props.onChangeChecked(true)}
       onPointerDown={() => props.onChangeChecked(true)}
       onBlur={(e) => {
         let newlyFocusedElement = e.relatedTarget;
@@ -104,7 +103,7 @@ const Clip: React.FC<{
       >
         <IconButton
           level="2"
-          onClick={() =>
+          onPointerDown={() =>
             props.data.start != null && props.onSeek(props.data.start)
           }
           className={css`
@@ -115,7 +114,7 @@ const Clip: React.FC<{
         </IconButton>
         <IconButton
           level="1"
-          onClick={
+          onPointerDown={
             props.video == null || props.data.start == null
               ? undefined
               : () => {
@@ -138,7 +137,9 @@ const Clip: React.FC<{
         </IconButton>
         <IconButton
           level="2"
-          onClick={() => props.data.end != null && props.onSeek(props.data.end)}
+          onPointerDown={() =>
+            props.data.end != null && props.onSeek(props.data.end)
+          }
           className={css`
             visibility: ${props.data.end != null ? "visible" : "hidden"};
           `}
@@ -183,7 +184,7 @@ const Clip: React.FC<{
             />
             <IconButton
               level="4"
-              onClick={() => {
+              onPointerDown={() => {
                 let video = props.video;
                 if (!video) return;
 
@@ -222,7 +223,7 @@ const Clip: React.FC<{
         `}
       />
 
-      <IconButton level="3" onClick={() => props.onRemove(props.data)}>
+      <IconButton level="3" onPointerDown={() => props.onRemove(props.data)}>
         <DeleteOutlined />
       </IconButton>
     </div>

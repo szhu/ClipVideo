@@ -220,7 +220,7 @@ export function App() {
               >
                 <IconButton
                   level="2"
-                  onClick={() => {
+                  onPointerDown={() => {
                     if (!video) return;
 
                     video.currentTime = 0;
@@ -229,13 +229,17 @@ export function App() {
                   <SkipPrevious />
                 </IconButton>
 
-                <IconButton level="1" showShape="always" onClick={playPause}>
+                <IconButton
+                  level="1"
+                  showShape="always"
+                  onPointerDown={playPause}
+                >
                   {isPlaying ? <Pause /> : <PlayArrow />}
                 </IconButton>
 
                 <IconButton
                   level="2"
-                  onClick={() => {
+                  onPointerDown={() => {
                     if (!video) return;
 
                     video.currentTime = video.duration;
@@ -264,7 +268,7 @@ export function App() {
                   >
                     <IconButton
                       level="2"
-                      onClick={handleSkipButton}
+                      onPointerDown={handleSkipButton}
                       data-seconds={-seconds}
                     >
                       <FastRewind />
@@ -283,7 +287,7 @@ export function App() {
                     />
                     <IconButton
                       level="2"
-                      onClick={handleSkipButton}
+                      onPointerDown={handleSkipButton}
                       data-seconds={seconds}
                     >
                       <FastForward />
@@ -321,7 +325,7 @@ export function App() {
                           video?.playbackRate === speed ? "always" : "hover"
                         }
                         level="3"
-                        onClick={changeSpeed}
+                        onPointerDown={changeSpeed}
                         data-speed={speed}
                       >
                         {speed}&times;
@@ -362,6 +366,7 @@ export function App() {
 
                   display: ${video?.src ? "block" : "none"};
                 `}
+                onPointerDown={playPause}
               />
               <div
                 className={css`
@@ -479,7 +484,7 @@ export function App() {
               level="4"
               shape="long"
               showShape="always"
-              onClick={newClip}
+              onPointerDown={newClip}
             >
               <AddCircle /> Add
             </TextButton>
@@ -493,7 +498,7 @@ export function App() {
               level="4"
               shape="long"
               showShape="always"
-              onClick={async () => {
+              onPointerDown={async () => {
                 let json = JSON.stringify(clips, null, 2);
                 await navigator.clipboard?.writeText(json);
                 await new Promise((resolve) => setTimeout(resolve, 0));
@@ -513,7 +518,7 @@ export function App() {
               level="4"
               shape="long"
               showShape="always"
-              onClick={async () => {
+              onPointerDown={async () => {
                 let commands = generateCommands(videoName, clips);
                 await navigator.clipboard?.writeText(commands.join("\n"));
                 await new Promise((resolve) => setTimeout(resolve, 0));
