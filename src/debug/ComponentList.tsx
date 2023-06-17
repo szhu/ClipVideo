@@ -92,6 +92,9 @@ const ComponentList: React.FC = () => {
           onChangeChecked={(checked) => {
             console.log("checked", checked);
           }}
+          onSeek={() => {
+            console.log("seek");
+          }}
           video={undefined}
         />
       </ComponentSet>

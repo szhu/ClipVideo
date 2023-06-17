@@ -315,12 +315,11 @@ export function App() {
                   </IconButton>
                   <SecondsInput
                     value={seconds}
-                    onChange={(e) => {
-                      let newValue = parseFloat(e.currentTarget.value);
+                    onChangeValue={(value) => {
                       setSkipLevels((skipLevels) => {
                         const newSkipLevels = //
                           [...skipLevels] as [number, number, number];
-                        newSkipLevels[i] = newValue;
+                        newSkipLevels[i] = value;
                         return newSkipLevels;
                       });
                     }}
