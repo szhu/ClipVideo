@@ -11,6 +11,8 @@ import {
   SkipPrevious,
 } from "@mui/icons-material";
 import { useEffect, useState } from "react";
+import { useClipActions } from "../actions/useClipActions";
+import { useVideoActions } from "../actions/useVideoActions";
 import { ClipData } from "../data/ClipData";
 import ComponentList from "../debug/ComponentList";
 import generateCommands from "../export/generateCommands";
@@ -38,92 +40,44 @@ export function App() {
     selectedClipId: undefined,
     clips: [],
   });
-  const [video, setVideo] = useVideo(
-    document.querySelector("video") as HTMLVideoElement | null,
-  );
-  // https://stackoverflow.com/a/6877530
-  const isVideoPlaying = Boolean(
-    video && video.currentTime > 0 && !video.paused && !video.ended,
-    //  && video.readyState > 2,
-  );
 
-  const [videoName, setVideoName] = useState<string>("video.mp4");
-
+  // Skip levels:
   const [skipLevels, setSkipLevels] = [
     data.skipLevels,
     createSetStateForKey(setData, "skipLevels"),
   ] as const;
+
+  // Selected clip:
   const [selectedClipId, setSelectedClipId] = [
     data.selectedClipId,
     createSetStateForKey(setData, "selectedClipId"),
   ] as const;
+
+  // Clip daa:
   const [clips, setClips] = [
     data.clips,
     createSetStateForKey(setData, "clips"),
   ] as const;
-
   const clipsReversed = [...clips].reverse();
+  const { newClip, changeClip, removeClip } = useClipActions(clips, setClips);
 
-  function newClip(): void {
-    setClips((clips) => [
-      ...clips,
-      {
-        id: "" + Math.random(),
-        start: undefined,
-        end: undefined,
-        name: "",
-      },
-    ]);
-  }
+  // Video:
+  const [video, setVideo] = useVideo(
+    document.querySelector("video") as HTMLVideoElement | null,
+  );
+  const { isPlaying, changeSpeed, playPause, skip } = useVideoActions(video);
 
-  function changeClip(clipToChange: ClipData): void {
-    setClips((clips) =>
-      clips.map((clip) => (clip.id === clipToChange.id ? clipToChange : clip)),
-    );
-  }
+  // Video name:
+  const [videoName, setVideoName] = useState<string>("video.mp4");
 
-  function removeClip(clipToRemove: ClipData): void {
-    setClips((clips) => clips.filter((clip) => clip.id !== clipToRemove.id));
-  }
+  //
 
-  function changeSpeed(event: React.MouseEvent<HTMLElement>): void {
-    const speed = parseFloat(event.currentTarget.dataset.speed as string);
-
-    if (video) {
-      try {
-        video.playbackRate = speed;
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }
-
-  function skipButton(event: React.MouseEvent<HTMLElement>): void {
+  function handleSkipButton(event: React.MouseEvent<HTMLElement>): void {
     const seconds = parseFloat(event.currentTarget.dataset.seconds as string);
     skip(seconds);
   }
 
-  async function playPause() {
-    if (video) {
-      try {
-        if (isVideoPlaying) {
-          video.pause();
-        } else {
-          await video.play();
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }
-
-  function skip(seconds: number) {
-    if (video) {
-      video.currentTime += seconds;
-    }
-  }
-
-  useEventListener(window, "keydown", async (e) => {
+  useEventListener(window, "keydown", async function handleKeyEvent(e) {
     if (e.key === "Escape") {
       if (e.target instanceof HTMLElement) {
         e.target.blur();
@@ -151,24 +105,27 @@ export function App() {
     }
   });
 
-  useEffect(() => {
-    let selectedClip = clips.find((clip) => clip.id === selectedClipId);
+  useEffect(
+    function clampTimeToClipBounds() {
+      let selectedClip = clips.find((clip) => clip.id === selectedClipId);
 
-    if (video && isVideoPlaying && selectedClip) {
-      if (
-        selectedClip.start != null &&
-        video.currentTime < selectedClip.start
-      ) {
-        video.currentTime = selectedClip.start;
-      } else if (
-        selectedClip.end != null &&
-        video.currentTime > selectedClip.end
-      ) {
-        video.pause();
-        video.currentTime = selectedClip.end;
+      if (video && isPlaying && selectedClip) {
+        if (
+          selectedClip.start != null &&
+          video.currentTime < selectedClip.start
+        ) {
+          video.currentTime = selectedClip.start;
+        } else if (
+          selectedClip.end != null &&
+          video.currentTime > selectedClip.end
+        ) {
+          video.pause();
+          video.currentTime = selectedClip.end;
+        }
       }
-    }
-  }, [video?.currentTime, selectedClipId, clips]);
+    },
+    [video?.currentTime, selectedClipId, clips],
+  );
 
   return (
     <>
@@ -271,24 +228,8 @@ export function App() {
                   <SkipPrevious />
                 </IconButton>
 
-                <IconButton
-                  level="1"
-                  showShape="always"
-                  onClick={async () => {
-                    if (!video) return;
-
-                    try {
-                      if (isVideoPlaying) {
-                        video.pause();
-                      } else {
-                        await video.play();
-                      }
-                    } catch (error) {
-                      console.error(error);
-                    }
-                  }}
-                >
-                  {isVideoPlaying ? <Pause /> : <PlayArrow />}
+                <IconButton level="1" showShape="always" onClick={playPause}>
+                  {isPlaying ? <Pause /> : <PlayArrow />}
                 </IconButton>
 
                 <IconButton
@@ -322,7 +263,7 @@ export function App() {
                   >
                     <IconButton
                       level="3"
-                      onClick={skipButton}
+                      onClick={handleSkipButton}
                       data-seconds={-seconds}
                     >
                       <FastRewind />
@@ -341,7 +282,7 @@ export function App() {
                     />
                     <IconButton
                       level="3"
-                      onClick={skipButton}
+                      onClick={handleSkipButton}
                       data-seconds={seconds}
                     >
                       <FastForward />
@@ -409,7 +350,7 @@ export function App() {
             >
               <video
                 ref={setVideo}
-                controls={!isVideoPlaying}
+                controls={!isPlaying}
                 playsInline
                 className={css`
                   height: 100%;
