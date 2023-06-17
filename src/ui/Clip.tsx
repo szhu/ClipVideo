@@ -83,6 +83,7 @@ const Clip: React.FC<{
           className={css`
             visibility: ${props.onPlay ? "visible" : "hidden"};
           `}
+          showShape={props.checked && !props.video?.paused ? "always" : "hover"}
         >
           <PlayArrow />
         </IconButton>
@@ -131,18 +132,19 @@ const Clip: React.FC<{
               })}
               width="12ch"
             />
-            <IconButton level="4">
-              <GpsNotFixed
-                onClick={() => {
-                  let video = props.video;
-                  if (!video) return;
+            <IconButton
+              level="4"
+              onClick={() => {
+                let video = props.video;
+                if (!video) return;
 
-                  props.onChange({
-                    ...props.data,
-                    [key]: video.currentTime,
-                  });
-                }}
-              />
+                props.onChange({
+                  ...props.data,
+                  [key]: video.currentTime,
+                });
+              }}
+            >
+              <GpsNotFixed />
             </IconButton>
           </div>
         ))}

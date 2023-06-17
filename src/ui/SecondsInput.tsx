@@ -2,6 +2,18 @@ import { useState } from "react";
 import TextInput from "./TextInput";
 import TextSpan from "./TextSpan";
 
+function removeKeysFromObject<T extends object>(
+  obj: T,
+  ...keysToRemove: (keyof T)[]
+): Partial<T> {
+  let result: Partial<T> = {};
+  for (let key in obj) {
+    if (keysToRemove.includes(key as keyof T)) continue;
+    result[key] = obj[key];
+  }
+  return result;
+}
+
 const SecondsInput: React.FC<
   React.InputHTMLAttributes<HTMLInputElement> & {
     onChangeValue: (value: number) => void;
@@ -15,7 +27,7 @@ const SecondsInput: React.FC<
     <span>
       <TextInput
         type="text"
-        {...props}
+        {...removeKeysFromObject(props, "onChangeValue")}
         value={displayed}
         placeholder={props.value?.toString()}
         onChange={(e) => {

@@ -511,6 +511,7 @@ export function App() {
               padding: 0 8rem;
               gap: 16rem;
               align-items: center;
+              user-select: none;
             `}
           >
             <TextSpan level="3">Clips</TextSpan>
